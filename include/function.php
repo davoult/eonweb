@@ -739,7 +739,7 @@ function ldap_escape($str, $login=false, $escape=false){
 }
 
 // User creation
-function insert_user($user_name, $user_descr, $user_group, $user_password1, $user_password2, $user_type, $user_location, $user_mail, $user_limitation, $message, $in_nagvis = false, $in_cacti = false, $nagvis_group = false, $user_language = false){
+function insert_user($user_name, $user_descr, $user_group, $user_password1, $user_password2, $user_type, $user_location, $user_mail, $user_limitation, $message, $in_nagvis = false, $in_cacti = false, $nagvis_group = false, $user_language = false, $user_defaultpage = 0){
 	global $database_host;
 	global $database_cacti;
 	global $database_username;
@@ -774,7 +774,7 @@ function insert_user($user_name, $user_descr, $user_group, $user_password1, $use
 			$user_password = md5($user_password1);
 			
 			// Insert into eonweb
-			sqlrequest("$database_eonweb","INSERT INTO users (user_name,user_descr,group_id,user_passwd,user_type,user_location,user_limitation,user_language) VALUES('$user_name', '$user_descr', '$user_group', '$user_password', '$user_type', '$user_location', '$user_limitation', '$user_language')");
+			sqlrequest("$database_eonweb","INSERT INTO users (user_name,user_descr,group_id,user_passwd,user_type,user_location,user_limitation,user_language,user_defaultpage) VALUES('$user_name', '$user_descr', '$user_group', '$user_password', '$user_type', '$user_location', '$user_limitation', '$user_language', '$user_defaultpage')");
 			$user_id=mysqli_result(sqlrequest("$database_eonweb","SELECT user_id FROM users WHERE user_name='$user_name'"),0,"user_id");
 			$group_name=mysqli_result(sqlrequest("$database_eonweb","SELECT group_name FROM groups WHERE group_id='$user_group'"),0,"group_name");
 
@@ -889,6 +889,44 @@ function getLabel($reference){
 
 }
 
+// Display user language selection  
+function GetUserLang($user_id) {
+
+	global $database_eonweb;
+	global $path_languages;
+
+	// definition of variables and Research language files
+	$path_label_lang = "label.admin_user.user_lang_"; 
+	$files = array('en');
+	$handler = opendir($path_languages);
+
+	while ($file = readdir($handler)) {
+		if(preg_match('#messages-(.+).json#', $file, $matches)){
+			$files[] = $matches[1];
+		}
+	}
+
+	closedir($handler);
+	$files = array_filter($files);
+	array_unshift($files,"0");
+	$files = array_unique($files);
+
+	// creation of a select and catch values
+	$langtmp = mysqli_result(sqlrequest("$database_eonweb","SELECT user_language FROM users WHERE user_id='".$user_id."'"),0);
+	$res = '<select class="form-control" name="user_language">';
+	foreach($files as $v) {
+		if($v == $langtmp){
+			$res.="<option value='".$v."' selected=selected>".getLabel($path_label_lang.$v)."</option>";
+		}
+		else{
+			$res.="<option value='".$v."'>".getLabel($path_label_lang.$v)."</option>";
+		}
+	}
+	$res .= '</select>';
+
+	return $res;
+}
+
 // get default page
 function getDefaultPage($usrlimit=0){
 
@@ -899,6 +937,8 @@ function getDefaultPage($usrlimit=0){
 	global $path_menu_limited_custom;
 	global $path_menus;
 	global $path_menus_custom;
+	global $database_eonweb;
+	global $user_id;
 
 	// load dictionnary if not isset
 	if(!isset($t)) {
@@ -921,8 +961,15 @@ function getDefaultPage($usrlimit=0){
 		}
 	} 
 	
-	return $defaultpage;
+	if(isset($_COOKIE["user_id"])) {
+		$tempDefaultpage = mysqli_result(sqlrequest("$database_eonweb","SELECT user_defaultpage FROM users WHERE user_id='".$_COOKIE["user_id"]."'"),0);
 
+		if($tempDefaultpage != '0'){
+			$defaultpage = $tempDefaultpage;
+		}
+	}
+		
+	return $defaultpage;
 }
 
 // get frame url

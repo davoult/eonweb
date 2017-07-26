@@ -42,13 +42,10 @@ include("../../side.php");
 	$group_mgt_list=retrieve_form_data("group_mgt_list",null);
 	$group_selected=retrieve_form_data("group_selected",null);
 	
-	if 	($action == 'submit')
+	if (isset($group_mgt_list))
 	{
 		switch($group_mgt_list)
 		{
-			case "add_group":
-				echo "<meta http-equiv=refresh content='0;URL=add_modify_group.php'>";
-				break;
 			case "delete_group":
 				if (isset($group_selected[0]))
 				{
@@ -194,31 +191,8 @@ include("../../side.php");
 			</table>
 		</div>
 		
-		<div class="form-group">
-			<select class="form-control" name="group_mgt_list" size=1>
-			<?php
-			// Get the global table
-			global $array_group_mgt;
-
-			// Get the first array key
-			reset($array_group_mgt);
-
-			// Display the list of management choices
-			$cpt = 1;
-			while (list($mgt_name, $mgt_url) = each($array_group_mgt)) {
-				if($cpt == 3){
-					if($ldap_conf){
-						echo "<option value='$mgt_url'>".getLabel($mgt_name)."</option>";
-					}
-				} else {
-					echo "<option value='$mgt_url'>".getLabel($mgt_name)."</option>";
-				}
-				$cpt++;
-			}
-			?>
-			</select>
-		</div>
-		<button id="mgt_group_submit" class="btn btn-primary" type="submit" name="action" value="submit"><?php echo getLabel("action.submit"); ?></button>
+		<a href="./add_modify_group.php" class="btn btn-success" role="button"><?php echo getLabel("action.add");?></a>
+		<button id="mgt_group_submit" class="btn btn-danger" type="submit" name="group_mgt_list" value="delete_group"><?php echo getLabel("action.clear"); ?></button>
 		<button class="btn btn-primary hidden" id="show_ldap_users"><?php echo getLabel("action.show_ldap_users"); ?></button>
 	</form>
 

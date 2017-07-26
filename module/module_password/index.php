@@ -37,16 +37,19 @@ include("../../side.php");
 		$usrid=$_COOKIE['user_id'];
 		$user_password1= "abcdefghijklmnopqrstuvwxyz";
 		$user_password2= "abcdefghijklmnopqrstuvwxyz";
+		$user_defaultpage = mysqli_result(sqlrequest("$database_eonweb","SELECT user_defaultpage FROM users WHERE user_id='".$usrid."'"),0);
 
 		if(isset($_POST["update"])) {
 			$user_password1 = retrieve_form_data("user_password1","");
 			$user_password2 = retrieve_form_data("user_password2","");
+			$user_language = retrieve_form_data("user_language","");
+			$user_defaultpage = retrieve_form_data("user_defaultpage","");
 			if (($user_password1 != "") && ($user_password1 != null) && ($user_password1 == $user_password2)) {
 				if($user_password1!="abcdefghijklmnopqrstuvwxyz") {
 					$user_password = md5($user_password1);
 
 					// Insert into eonweb
-					sqlrequest("$database_eonweb","UPDATE users set user_passwd='$user_password' WHERE user_id='$usrid';");
+					sqlrequest("$database_eonweb","UPDATE users set user_passwd='$user_password',user_defaultpage='$user_defaultpage' WHERE user_id='$usrid';");
 
 					// update password into nagvis if user is in
 					$bdd = new PDO('sqlite:/srv/eyesofnetwork/nagvis/etc/auth.db');
@@ -90,6 +93,54 @@ include("../../side.php");
 				<div class="col-md-9">
 					<input class="form-control" type='password' name='user_password2' value='<?php echo $user_password2?>'>
 				</div>
+			</div>
+		</div>
+		<div class="row form-group">
+			<label class="col-md-3"><?php echo getLabel("label.admin_user.user_lang"); ?></label>
+			<div class="col-md-9">
+				<?php echo GetUserLang($_COOKIE["user_id"]); ?>
+			</div>
+		</div>
+		<div class="row form-group">
+			<label class="col-md-3"><?php echo getLabel("label.admin_user.user_defaultpage"); ?></label>
+			<div class="col-md-9">
+				<?php 
+				global $menus;
+				$res2 = "<input id='user_defaultpage' class='form-control' type='text' name='user_defaultpage' value='".$user_defaultpage."' onFocus='$(this).autocomplete({source: [";
+				if(isset($menus["menutab"])){
+					foreach($menus["menutab"] as $menutab){
+						$tab_request = "SELECT tab_".$menutab["id"]." FROM groupright WHERE group_id=".$_COOKIE["group_id"].";";
+						$tab_right = mysqli_result(sqlrequest($database_eonweb, $tab_request),0);				
+						if($tab_right == 0){ continue; }
+						
+						if(isset($menutab["link"])){
+							foreach($menutab["link"] as $menulink) {
+								if($menulink["target"]=="frame") { $res2 .= '"'.$path_frame.urlencode($menulink['url']).'",';	}
+								else{$res2 .= '"'.$menulink["url"].'",';}
+							}
+						}
+						if(isset($menutab["menusubtab"])){
+							foreach($menutab["menusubtab"] as $menusubtab) {
+									foreach($menusubtab["link"] as $menulink) {
+										if($menulink["target"]=="frame") { $res2 .= '"'.$path_frame.urlencode($menulink['url']).'",';	}
+										else{$res2 .= '"'.$menulink["url"].'",';}
+									}
+							}
+						}
+					}
+				}
+				else{
+					foreach($menus["link"] as $menulink) {
+						$res2 .= '"'.$menulink["url"].'",';
+						if($menulink["target"]=="frame") { $res2 .= '"'.$path_frame.urlencode($menulink['url']).'",';		}
+					}
+				}
+				$res2 = rtrim($res2, ",");
+				$res3=$res2;
+				$res2 .= "]})'>";
+				
+				echo 	$res2;
+				?>
 			</div>
 		</div>
 		<button class='btn btn-primary' type='submit' name='update' value='update'><?php echo getLabel("action.update"); ?></button>

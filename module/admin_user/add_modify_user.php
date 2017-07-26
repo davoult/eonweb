@@ -36,52 +36,13 @@ include("../../side.php");
 		function retrieve_user_info($user_id)
 		{
 			global $database_eonweb;
-			return sqlrequest("$database_eonweb","SELECT user_name, user_descr, group_id, user_passwd, user_type, user_location, user_limitation, user_language  FROM users WHERE user_id='$user_id'");
-		}
-
-		// Display user language selection  
-		function GetUserLang() {
-
-			global $database_eonweb;
-			global $user_id;
-			global $path_languages;
-
-			// definition of variables and Research language files
-			$path_label_lang = "label.admin_user.user_lang_"; 
-			$files = array('en');
-			$handler = opendir($path_languages);
-
-			while ($file = readdir($handler)) {
-				if(preg_match('#messages-(.+).json#', $file, $matches)){
-					$files[] = $matches[1];
-				}
-			}
-
-			closedir($handler);
-			$files = array_filter($files);
-			array_unshift($files,"0");
-			$files = array_unique($files);
-
-			// creation of a select and catch values
-			$langtmp = mysqli_result(sqlrequest("$database_eonweb","SELECT user_language FROM users WHERE user_id='".$user_id."'"),0);
-			$res = '<select class="form-control" name="user_language">';
-			foreach($files as $v) {
-				if($v == $langtmp){
-					$res.="<option value='".$v."' selected=selected>".getLabel($path_label_lang.$v)."</option>";
-				}
-				else{
-					$res.="<option value='".$v."'>".getLabel($path_label_lang.$v)."</option>";
-				}
-			}
-			$res .= '</select>';
-
-			return $res;
+			return sqlrequest("$database_eonweb","SELECT user_name, user_descr, group_id, user_passwd, user_type, user_location, user_limitation, user_language, user_defaultpage FROM users WHERE user_id='$user_id'");
 		}
 		
 		//--------------------------------------------------------
 
 		// Update User Information & Right
-		function update_user($user_id, $user_name, $user_descr, $user_group, $user_password1, $user_password2 ,$user_type, $user_location, $user_mail, $user_limitation, $old_group_id, $old_name, $create_user_in_nagvis, $create_user_in_cacti, $nagvis_role_id, $user_language)
+		function update_user($user_id, $user_name, $user_descr, $user_group, $user_password1, $user_password2 ,$user_type, $user_location, $user_mail, $user_limitation, $old_group_id, $old_name, $create_user_in_nagvis, $create_user_in_cacti, $nagvis_role_id, $user_language, $user_defaultpage)
 		{
 			global $database_host;
 			global $database_cacti;
@@ -111,11 +72,11 @@ include("../../side.php");
 					if ($user_password1 != "abcdefghijklmnopqrstuvwxyz") {
 						$passwd_temp = md5($user_password1);
 						// Update into eonweb
-						sqlrequest("$database_eonweb","UPDATE users set user_name='$user_name', user_descr='$user_descr',group_id='$user_group',user_passwd='$passwd_temp',user_type='$user_type',user_location='$user_location',user_limitation='$user_limitation',user_language='$user_language' WHERE user_id ='$user_id'");
+						sqlrequest("$database_eonweb","UPDATE users set user_name='$user_name', user_descr='$user_descr',group_id='$user_group',user_passwd='$passwd_temp',user_type='$user_type',user_location='$user_location',user_limitation='$user_limitation',user_language='$user_language', user_defaultpage='$user_defaultpage' WHERE user_id ='$user_id'");
 					}
 					else {
 						// Update into eonweb
-						sqlrequest("$database_eonweb","UPDATE users set user_name='$user_name', user_descr='$user_descr',group_id='$user_group',user_type='$user_type',user_location='$user_location',user_limitation='$user_limitation',user_language='$user_language' WHERE user_id ='$user_id'");
+						sqlrequest("$database_eonweb","UPDATE users set user_name='$user_name', user_descr='$user_descr',group_id='$user_group',user_type='$user_type',user_location='$user_location',user_limitation='$user_limitation',user_language='$user_language', user_defaultpage='$user_defaultpage' WHERE user_id ='$user_id'");
 					}
 			
 					// Update into lilac
@@ -221,6 +182,7 @@ include("../../side.php");
 		$user_type = retrieve_form_data("user_type","");
 		$user_limitation = retrieve_form_data("user_limitation","");
 		$user_language = retrieve_form_data("user_language","");
+		$user_defaultpage = retrieve_form_data("user_defaultpage","");
 		$old_group_id = mysqli_result(sqlrequest($database_eonweb,"select group_id from users where user_id='$user_id'"),0,"group_id");
 		$old_name = retrieve_form_data("user_name_old","");
 
@@ -265,7 +227,7 @@ include("../../side.php");
 				
 				$user_group = retrieve_form_data("user_group","");
 				$nagvis_grp = retrieve_form_data("nagvis_group", "");
-				$user_id=insert_user(stripAccents($user_name), $user_descr, $user_group, $user_password1, $user_password2, $user_type, $user_location,$user_mail,$user_limitation, true, $create_user_in_nagvis, $create_user_in_cacti, $nagvis_grp, $user_language);
+				$user_id=insert_user(stripAccents($user_name), $user_descr, $user_group, $user_password1, $user_password2, $user_type, $user_location,$user_mail,$user_limitation, true, $create_user_in_nagvis, $create_user_in_cacti, $nagvis_grp, $user_language, $user_defaultpage);
 				//message(8,"User location: $user_location",'ok');	// For debug pupose, to be removed
 
 				// Retrieve Group Information from database
@@ -276,8 +238,9 @@ include("../../side.php");
 					$user_descr=mysqli_result($user_name_descr,0,"user_descr");
 					$user_group=mysqli_result($user_name_descr,0,"group_id");
 					$user_type=mysqli_result($user_name_descr,0,"user_type");
-					$user_limitation = retrieve_form_data("user_limitation","");
-					$user_language = retrieve_form_data("user_language","");
+					$user_limitation = mysqli_result($user_name_descr,0,"user_limitation","");
+					$user_language = mysqli_result($user_name_descr,0,"user_language");
+					$user_defaultpage = mysqli_result($user_name_descr,0,"user_defaultpage");
 					$user_location=mysqli_result($user_name_descr,0,"user_location");
 					$user_password1= "abcdefghijklmnopqrstuvwxyz";
 					$user_password2= "abcdefghijklmnopqrstuvwxyz";
@@ -297,7 +260,7 @@ include("../../side.php");
 						// ACCOUNT UPDATE (and retrieve parameters)
 						//------------------------------------------------------------------------------------------------
 			if (isset($_POST['update'])){
-				update_user($user_id, stripAccents($user_name), $user_descr, $user_group, $user_password1, $user_password2, $user_type, $user_location, $user_mail, $user_limitation, $old_group_id, $old_name, $create_user_in_nagvis, $create_user_in_cacti, $nagvis_role_id, $user_language);	
+				update_user($user_id, stripAccents($user_name), $user_descr, $user_group, $user_password1, $user_password2, $user_type, $user_location, $user_mail, $user_limitation, $old_group_id, $old_name, $create_user_in_nagvis, $create_user_in_cacti, $nagvis_role_id, $user_language, $user_defaultpage);	
 				//message(8,"Update: User location = $user_location",'ok');	// For debug pupose, to be removed
 				//message(8,"Update: User name =  $user_name",'ok');			// For debug pupose, to be removed
 			}
@@ -310,6 +273,7 @@ include("../../side.php");
 			$user_group=mysqli_result($user_name_descr,0,"group_id");
 			$user_type=mysqli_result($user_name_descr,0,"user_type");
 			$user_limitation=mysqli_result($user_name_descr,0,"user_limitation");
+			$user_defaultpage=mysqli_result($user_name_descr,0,"user_defaultpage");
 			$user_location=mysqli_result($user_name_descr,0,"user_location");
 			$user_password1="abcdefghijklmnopqrstuvwxyz";
 			$user_password2="abcdefghijklmnopqrstuvwxyz";
@@ -437,7 +401,38 @@ include("../../side.php");
 		<div class="row form-group">
 			<label class="col-md-3"><?php echo getLabel("label.admin_user.user_lang"); ?></label>
 			<div class="col-md-9">
-				<?php echo GetUserLang(); ?>
+				<?php echo GetUserLang($user_id); ?>
+			</div>
+		</div>
+		
+		<!-- Adding a default page defined by user -->
+		<div class="row form-group">
+			<label class="col-md-3"><?php echo getLabel("label.admin_user.user_defaultpage"); ?></label>
+			<div class="col-md-9">
+				<?php 
+				global $menus;
+				$res2 = "<input id='user_defaultpage' class='form-control' type='text' name='user_defaultpage' value='".$user_defaultpage."' onFocus='$(this).autocomplete({source: [";
+				foreach($menus["menutab"] as $menutab){
+					if(isset($menutab["link"])){
+						foreach($menutab["link"] as $menulink) {
+							if($menulink["target"]=="frame") { $res2 .= '"'.$path_frame.urlencode($menulink['url']).'",';	}
+							else{$res2 .= '"'.$menulink["url"].'",';}
+						}
+					}
+					if(isset($menutab["menusubtab"])){
+						foreach($menutab["menusubtab"] as $menusubtab) {
+								foreach($menusubtab["link"] as $menulink) {
+									if($menulink["target"]=="frame") { $res2 .= '"'.$path_frame.urlencode($menulink['url']).'",';	}
+									else{$res2 .= '"'.$menulink["url"].'",';}
+								}
+						}
+					}
+				}
+				$res2 = rtrim($res2, ",");
+				$res2 .= "]})'>";
+				
+				echo 	$res2;
+				?>
 			</div>
 		</div>
 		

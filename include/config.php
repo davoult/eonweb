@@ -97,6 +97,9 @@ $path_menu_limited="$path_languages/menus-limited";
 $path_menu_limited_custom="$path_languages/custom.menus-limited";
 $path_reports="$path_eonweb/include/reports";
 
+// # Backup Manager
+$path_backupconf="/etc/backup-manager.conf";
+
 // # Nagios
 $path_nagios="$path_eon/nagios";
 $path_notifier="$path_eon/notifier";
@@ -112,6 +115,7 @@ $path_nagiosbpcfg_bu="/tmp/nagios-bp.conf";
 $path_nagiosbpcfg_lock="/tmp/nagios_bp";
 $path_nagiosdowntime="$path_nagios/plugins/Downtime/downtime_list.txt";
 $path_notification="$path_notifier/etc/notifier.rules";
+$path_notifier="$path_eon/notifier";
 
 // # GED
 $ged_prefix="";
@@ -125,6 +129,11 @@ $path_gedtcfg="$path_ged/etc/gedt.cfg";
 // # Notifier
 $path_notifier_rules="$path_notifier/etc/notifier.rules";
 $path_notifier_methods="$path_notifier/etc/notifier.cfg";
+
+// # Net-SNMP
+$path_snmpwalk="/usr/bin/snmpwalk";
+$path_snmpconf="/etc/snmp/snmpd.conf";
+$path_snmptrapconf="/etc/snmp/snmptrapd.conf";
 
 // # NetCAT
 $default_minport=1;

@@ -40,13 +40,10 @@ include("../../side.php");
 	$user_mgt_list=retrieve_form_data("user_mgt_list",null);
 	$user_selected=retrieve_form_data("user_selected",null);
 	
-	if($action == 'submit') 
+	if(isset($user_mgt_list)) 
 	{
 		switch($user_mgt_list)
 		{
-			case "add_user":
-				echo "<meta http-equiv=refresh content='0;url=add_modify_user.php'>";
-				break;
 			case "delete_user":
 				if (isset($user_selected[0]))
 				{
@@ -178,24 +175,8 @@ include("../../side.php");
 				</tbody>
 			</table>
 		</div>
-		
-		<div class="form-group">
-			<select class="form-control" name="user_mgt_list" size=1>
-			<?php	
-			// Get the global table
-			global $array_user_mgt;
-
-			// Get the first array key
-			reset($array_user_mgt);
-
-			// Display the list of management choices
-			while (list($mgt_name, $mgt_url) = each($array_user_mgt)) {
-				echo "<option value='$mgt_url'>".getLabel($mgt_name)."</option>";
-			}
-			?>
-			</select>
-		</div>
-		<button class="btn btn-primary" type="submit" name="action" value="submit"><?php echo getLabel("action.submit"); ?></button>
+		<a href="./add_modify_user.php" class="btn btn-success" role="button"><?php echo getLabel("action.add");?></a>
+		<button class="btn btn-danger" type="submit" name="user_mgt_list" value="delete_user"><?php echo getLabel("action.clear"); ?></button>
 	</form>
 
 </div>
